@@ -17,6 +17,7 @@ const documents = {
     "query Characters($page: Int, $filter: FilterCharacter) {\n  characters(page: $page, filter: $filter) {\n    results {\n      id\n      name\n      image\n    }\n  }\n}": types.CharactersDocument,
     "query Episode($id: ID!) {\n  episode(id: $id) {\n    id\n    name\n    air_date\n    episode\n    characters {\n      id\n      name\n      image\n    }\n  }\n}": types.EpisodeDocument,
     "query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}": types.EpisodesDocument,
+    "query LikesPage($locationIds: [ID!]!, $characterIds: [ID!]!, $episodeIds: [ID!]!) {\n  charactersByIds(ids: $characterIds) {\n    id\n    name\n    image\n  }\n  locationsByIds(ids: $locationIds) {\n    id\n    name\n  }\n  episodesByIds(ids: $episodeIds) {\n    name\n    id\n  }\n}": types.LikesPageDocument,
     "query Location($id: ID!) {\n  location(id: $id) {\n    id\n    name\n    type\n    dimension\n    residents {\n      id\n      name\n      image\n    }\n  }\n}": types.LocationDocument,
     "query Locations($page: Int, $filter: FilterLocation) {\n  locations(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}": types.LocationsDocument,
 };
@@ -51,6 +52,10 @@ export function graphql(source: "query Episode($id: ID!) {\n  episode(id: $id) {
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query LikesPage($locationIds: [ID!]!, $characterIds: [ID!]!, $episodeIds: [ID!]!) {\n  charactersByIds(ids: $characterIds) {\n    id\n    name\n    image\n  }\n  locationsByIds(ids: $locationIds) {\n    id\n    name\n  }\n  episodesByIds(ids: $episodeIds) {\n    name\n    id\n  }\n}"): (typeof documents)["query LikesPage($locationIds: [ID!]!, $characterIds: [ID!]!, $episodeIds: [ID!]!) {\n  charactersByIds(ids: $characterIds) {\n    id\n    name\n    image\n  }\n  locationsByIds(ids: $locationIds) {\n    id\n    name\n  }\n  episodesByIds(ids: $episodeIds) {\n    name\n    id\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

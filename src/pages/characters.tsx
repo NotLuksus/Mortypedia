@@ -5,6 +5,7 @@ import { Input, Select, SelectItem } from "@nextui-org/react";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
+import { api } from "@/utils/api";
 
 export default function Characters() {
   const [page, setPage] = useState(1);
@@ -13,6 +14,8 @@ export default function Characters() {
   const [species, setSpecies] = useState("");
   const [gender, setGender] = useState<string | undefined>(undefined);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  const trpcContext = api.useContext();
   const { data, loading, fetchMore } = useQuery(CharactersDocument, {
     variables: {
       filter: {
@@ -32,6 +35,20 @@ export default function Characters() {
 
     return schema.parse(character);
   });
+
+  const { data: likes } = api.user.getLikes.useQuery("character");
+  const { mutate } = api.user.toggleLike.useMutation();
+
+  const handleLike = (id: number) => {
+    mutate(
+      { entityId: id, entityType: "character" },
+      {
+        async onSuccess() {
+          await trpcContext.user.getLikes.refetch();
+        },
+      },
+    );
+  };
 
   const intersectionRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +108,7 @@ export default function Characters() {
         <title>Mortypedia - Characters</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="text-foreground flex min-h-screen w-full flex-col items-center">
+      <main className="flex min-h-screen w-full flex-col items-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-center gap-[2rem] px-[1rem] py-[4rem] lg:w-[80%] lg:justify-center">
           <h1 className="text-center text-5xl">Characters</h1>
           <div className="flex w-full flex-col items-center gap-[1rem] md:flex-row">
@@ -156,6 +173,10 @@ export default function Characters() {
                     name={character?.name}
                     type="character"
                     image={character.image}
+                    isLiked={likes?.some(
+                      (l) => l.entityId === Number(character?.id),
+                    )}
+                    onToggleLike={() => handleLike(Number(character?.id))}
                   />
                 ))}
               </>

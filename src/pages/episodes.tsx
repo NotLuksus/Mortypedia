@@ -1,5 +1,6 @@
 import { EntityCard, EntityCardSkeleton } from "@/components";
 import { EpisodesDocument } from "@/generated/graphql";
+import { api } from "@/utils/api";
 import { useQuery } from "@apollo/client";
 import { Input } from "@nextui-org/react";
 import Head from "next/head";
@@ -10,6 +11,7 @@ export default function Episodes() {
   const [page, setPage] = useState(1);
   const [name, setName] = useState("");
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const trpcContext = api.useContext();
   const { data, loading, fetchMore } = useQuery(EpisodesDocument, {
     variables: {
       filter: {
@@ -25,6 +27,20 @@ export default function Episodes() {
 
     return schema.parse(episode);
   });
+
+  const { data: likes } = api.user.getLikes.useQuery("episode");
+  const { mutate } = api.user.toggleLike.useMutation();
+
+  const handleLike = (id: number) => {
+    mutate(
+      { entityId: id, entityType: "episode" },
+      {
+        async onSuccess() {
+          await trpcContext.user.getLikes.refetch();
+        },
+      },
+    );
+  };
 
   const intersectionRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +97,7 @@ export default function Episodes() {
         <title>Mortypedia - Episodes</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="text-foreground flex min-h-screen w-full flex-col items-center">
+      <main className="flex min-h-screen w-full flex-col items-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-center gap-[2rem] px-[1rem] py-[4rem] lg:w-[80%] lg:justify-center">
           <h1 className="text-center text-5xl">Episodes</h1>
           <div className="flex w-full flex-col items-center gap-[1rem] md:flex-row">
@@ -104,6 +120,10 @@ export default function Episodes() {
                     name={episode?.name}
                     type="episode"
                     image={"/episodes.webp"}
+                    isLiked={likes?.some(
+                      (l) => l.entityId === Number(episode?.id),
+                    )}
+                    onToggleLike={() => handleLike(Number(episode?.id))}
                   />
                 ))}
               </>

@@ -1,5 +1,6 @@
 import { EntityCard, EntityCardSkeleton } from "@/components";
 import { LocationsDocument } from "@/generated/graphql";
+import { api } from "@/utils/api";
 import { useQuery } from "@apollo/client";
 import { Input } from "@nextui-org/react";
 import Head from "next/head";
@@ -12,6 +13,7 @@ export default function Location() {
   const [type, setType] = useState("");
   const [dimension, setDimension] = useState("");
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const trpcContext = api.useContext();
   const { data, loading, fetchMore } = useQuery(LocationsDocument, {
     variables: {
       filter: {
@@ -29,6 +31,20 @@ export default function Location() {
 
     return schema.parse(location);
   });
+
+  const { data: likes } = api.user.getLikes.useQuery("location");
+  const { mutate } = api.user.toggleLike.useMutation();
+
+  const handleLike = (id: number) => {
+    mutate(
+      { entityId: id, entityType: "location" },
+      {
+        async onSuccess() {
+          await trpcContext.user.getLikes.refetch();
+        },
+      },
+    );
+  };
 
   const intersectionRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +103,7 @@ export default function Location() {
         <title>Mortypedia - Locations</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="text-foreground flex min-h-screen w-full flex-col items-center">
+      <main className="flex min-h-screen w-full flex-col items-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-center gap-[2rem] px-[1rem] py-[4rem] lg:w-[80%] lg:justify-center">
           <h1 className="text-center text-5xl">Locations</h1>
           <div className="flex w-full flex-col items-center gap-[1rem] md:flex-row">
@@ -124,6 +140,10 @@ export default function Location() {
                     name={location?.name}
                     type="location"
                     image={"/locations.webp"}
+                    isLiked={likes?.some(
+                      (l) => l.entityId === Number(location?.id),
+                    )}
+                    onToggleLike={() => handleLike(Number(location?.id))}
                   />
                 ))}
               </>

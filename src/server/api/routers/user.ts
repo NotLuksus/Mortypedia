@@ -4,13 +4,20 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const userRouter = createTRPCRouter({
-  getLikes: protectedProcedure.query(({ ctx }) => {
-    return ctx.db
-      .select()
-      .from(likes)
-      .where(eq(likes.userId, ctx.session.user.id))
-      .execute();
-  }),
+  getLikes: protectedProcedure
+    .input(z.enum(["character", "episode", "location"]).optional())
+    .query(({ input, ctx }) => {
+      return ctx.db
+        .select()
+        .from(likes)
+        .where(
+          and(
+            eq(likes.userId, ctx.session.user.id),
+            input ? eq(likes.entityType, input) : undefined,
+          ),
+        )
+        .execute();
+    }),
   toggleLike: protectedProcedure
     .input(
       z.object({

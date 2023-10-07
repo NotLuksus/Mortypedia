@@ -1,7 +1,7 @@
 import { env } from "@/env.mjs";
 import { EpisodeDocument, type EpisodeQuery } from "@/generated/graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { Avatar } from "@nextui-org/react";
+import { Avatar, Button } from "@nextui-org/react";
 import {
   type GetServerSideProps,
   type InferGetServerSidePropsType,
@@ -10,8 +10,12 @@ import Head from "next/head";
 import OpenAI from "openai";
 import Link from "next/link";
 import { z } from "zod";
+import { useSession } from "next-auth/react";
+import { api } from "@/utils/api";
+import { Heart } from "lucide-react";
 
 const episodesSchema = z.object({
+  id: z.string(),
   air_date: z.string(),
   characters: z.array(
     z.object({
@@ -22,7 +26,6 @@ const episodesSchema = z.object({
   ),
   episode: z.string(),
   name: z.string(),
-  summary: z.string(),
 });
 
 export const getServerSideProps = (async (context) => {
@@ -73,24 +76,57 @@ export const getServerSideProps = (async (context) => {
 }>;
 
 export default function Episode({
+  id,
   summary,
   air_date,
   characters,
   episode,
   name,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const { data: session } = useSession();
+  const { data: isLiked } = api.user.isLiked.useQuery({
+    entityId: Number(id),
+    entityType: "episode",
+  });
+  const trpcContext = api.useContext();
+  const { mutate } = api.user.toggleLike.useMutation();
+
+  const handleLike = () => {
+    mutate(
+      { entityId: Number(id), entityType: "episode" },
+      {
+        async onSuccess() {
+          await trpcContext.user.isLiked.refetch();
+        },
+      },
+    );
+  };
   return (
     <>
       <Head>
         <title>Mortypedia - {name}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="text-foreground flex min-h-screen w-full flex-col items-center justify-center">
+      <main className="flex min-h-screen w-full flex-col items-center justify-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-start justify-center gap-[1rem] px-[1rem] py-[4rem] lg:w-[80%]">
           <h1 className="text-center text-5xl font-bold">{name}</h1>
-          <div className="flex flex-row gap-[1rem]">
+          <div className="flex flex-row items-center gap-[1rem]">
             <p className="text-center text-lg">{air_date}</p>
             <p className="text-center text-lg">{episode}</p>
+            {session && (
+              <Button
+                color="danger"
+                onClick={handleLike}
+                endContent={
+                  <Heart
+                    color="white"
+                    fill={isLiked ? "white" : "transparent"}
+                  />
+                }
+              >
+                {isLiked ? "Liked" : "Like"}
+              </Button>
+            )}
           </div>
           <p className="text-start text-lg">{summary}</p>
           <p className="text-start text-xl font-bold">In this episode: </p>

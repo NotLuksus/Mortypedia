@@ -1,0 +1,19 @@
+query LikesPage(
+  $locationIds: [ID!]!
+  $characterIds: [ID!]!
+  $episodeIds: [ID!]!
+) {
+  charactersByIds(ids: $characterIds) {
+    id
+    name
+    image
+  }
+  locationsByIds(ids: $locationIds) {
+    id
+    name
+  }
+  episodesByIds(ids: $episodeIds) {
+    name
+    id
+  }
+}

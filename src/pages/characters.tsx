@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { EntityCard, EntityCardSkeleton } from "@/components";
 import { CharactersDocument } from "@/generated/graphql";
 import { useQuery } from "@apollo/client";

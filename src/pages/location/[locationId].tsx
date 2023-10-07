@@ -1,7 +1,7 @@
 import { env } from "@/env.mjs";
 import { LocationDocument, type LocationQuery } from "@/generated/graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { Avatar } from "@nextui-org/react";
+import { Avatar, Button } from "@nextui-org/react";
 import {
   type GetServerSideProps,
   type InferGetServerSidePropsType,
@@ -10,8 +10,12 @@ import Head from "next/head";
 import OpenAI from "openai";
 import Link from "next/link";
 import { z } from "zod";
+import { useSession } from "next-auth/react";
+import { api } from "@/utils/api";
+import { Heart } from "lucide-react";
 
 const locationSchema = z.object({
+  id: z.string(),
   name: z.string(),
   type: z.string(),
   dimension: z.string(),
@@ -64,6 +68,7 @@ export const getServerSideProps = (async (context) => {
     },
   };
 }) satisfies GetServerSideProps<{
+  id: string;
   name: string;
   type: string;
   dimension: string;
@@ -76,12 +81,31 @@ export const getServerSideProps = (async (context) => {
 }>;
 
 export default function Episode({
+  id,
   name,
   type,
   dimension,
   residents,
   description,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const { data: session } = useSession();
+  const { data: isLiked } = api.user.isLiked.useQuery({
+    entityId: Number(id),
+    entityType: "location",
+  });
+  const trpcContext = api.useContext();
+  const { mutate } = api.user.toggleLike.useMutation();
+
+  const handleLike = () => {
+    mutate(
+      { entityId: Number(id), entityType: "location" },
+      {
+        async onSuccess() {
+          await trpcContext.user.isLiked.refetch();
+        },
+      },
+    );
+  };
   return (
     <>
       <Head>
@@ -91,9 +115,23 @@ export default function Episode({
       <main className="flex min-h-screen w-full flex-col items-center justify-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-start justify-center gap-[1rem] px-[1rem] py-[4rem] lg:w-[80%]">
           <h1 className="text-center text-5xl font-bold">{name}</h1>
-          <div className="flex flex-row gap-[1rem]">
+          <div className="flex flex-row items-center gap-[1rem]">
             <p className="text-center text-lg">{type}</p>
             <p className="text-center text-lg">{dimension}</p>
+            {session && (
+              <Button
+                color="danger"
+                onClick={handleLike}
+                endContent={
+                  <Heart
+                    color="white"
+                    fill={isLiked ? "white" : "transparent"}
+                  />
+                }
+              >
+                {isLiked ? "Liked" : "Like"}
+              </Button>
+            )}
           </div>
           <p className="text-start text-lg">{description}</p>
           <p className="text-start text-xl font-bold">Residents: </p>

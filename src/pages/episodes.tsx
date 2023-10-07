@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { EntityCard, EntityCardSkeleton } from "@/components";
 import { EpisodesDocument } from "@/generated/graphql";
 import { api } from "@/utils/api";

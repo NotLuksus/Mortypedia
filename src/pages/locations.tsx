@@ -1,12 +1,12 @@
 import { EntityCard, EntityCardSkeleton } from "@/components";
 import { LocationsDocument } from "@/generated/graphql";
 import { useQuery } from "@apollo/client";
-import { Input, Select, SelectItem } from "@nextui-org/react";
+import { Input } from "@nextui-org/react";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
-export default function Characters() {
+export default function Location() {
   const [page, setPage] = useState(1);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
@@ -21,13 +21,13 @@ export default function Characters() {
       },
     },
   });
-  const locations = data?.locations?.results?.map((character) => {
+  const locations = data?.locations?.results?.map((location) => {
     const schema = z.object({
       id: z.string(),
       name: z.string(),
     });
 
-    return schema.parse(character);
+    return schema.parse(location);
   });
 
   const intersectionRef = useRef<HTMLDivElement>(null);
@@ -136,7 +136,7 @@ export default function Characters() {
               </>
             )}
             {locations?.length === 0 && (
-              <p className="text-center text-2xl">No characters found</p>
+              <p className="text-center text-2xl">No location found</p>
             )}
           </ul>
         </div>

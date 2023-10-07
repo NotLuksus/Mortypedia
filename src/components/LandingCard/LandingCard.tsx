@@ -23,6 +23,7 @@ const LandingCard: FC<LandingCardProps> = ({
     <Card
       as={Link}
       isFooterBlurred
+      isPressable
       radius="lg"
       className={cn(
         "relative aspect-square w-[80%] max-w-[350px] cursor-pointer border-none",

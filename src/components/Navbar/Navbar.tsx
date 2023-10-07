@@ -21,7 +21,10 @@ const Navbar: FC = () => {
   return (
     <NextUiNavbar onMenuOpenChange={setOpen}>
       <NavbarBrand>
-        <NavbarMenuToggle className="mr-[1rem] sm:hidden" />
+        <NavbarMenuToggle
+          aria-label={open ? "Close menu" : "Open menu"}
+          className="mr-[1rem] sm:hidden"
+        />
         <Link as={NextLink} href="/">
           <p className="font-bold text-black">Mortypedia</p>
         </Link>

@@ -7,6 +7,7 @@ import { api } from "@/utils/api";
 
 import "@/styles/globals.css";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
+import { Navbar } from "@/components";
 
 const apolloClient = new ApolloClient({
   uri: "https://rickandmortyapi.com/graphql",
@@ -21,6 +22,7 @@ const App: AppType<{ session: Session | null }> = ({
     <ApolloProvider client={apolloClient}>
       <NextUIProvider>
         <SessionProvider session={session}>
+          <Navbar />
           <Component {...pageProps} />
         </SessionProvider>
       </NextUIProvider>

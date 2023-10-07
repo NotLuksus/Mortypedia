@@ -19,6 +19,12 @@ const characterSchema = z.object({
   status: z.string().optional(),
   species: z.string().optional(),
   gender: z.string().optional(),
+  episode: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    }),
+  ),
 });
 
 export const getServerSideProps = (async (context) => {
@@ -54,17 +60,9 @@ export const getServerSideProps = (async (context) => {
     ],
   });
 
-  const characterEpisodes = characterData?.episode
-    .filter(Boolean)
-    .map((episode) => ({
-      id: episode.id ?? "",
-      name: episode?.name ?? "",
-    }));
-
   return {
     props: {
       ...character,
-      episodes: characterEpisodes ?? [],
       profile: characterProfile.choices[0]?.message.content ?? "",
     },
   };
@@ -75,7 +73,7 @@ export const getServerSideProps = (async (context) => {
   status?: string;
   species?: string;
   gender?: string;
-  episodes: Array<{ id: string; name: string }>;
+  episode: Array<{ id: string; name: string }>;
   profile: string;
 }>;
 
@@ -85,7 +83,7 @@ export default function Episode({
   status,
   species,
   gender,
-  episodes,
+  episode,
   profile,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
@@ -113,7 +111,7 @@ export default function Episode({
 
           <p className="text-start text-xl font-bold">Appears in: </p>
           <ul className="flex w-full flex-row flex-wrap gap-[2.5rem] p-[1rem]">
-            {episodes.map((episode) => (
+            {episode.map((episode) => (
               <Link href={`/episode/${episode.id}`} key={episode.id}>
                 <li className="inline-flex w-fit min-w-[125px] cursor-pointer flex-col items-start justify-between gap-[1rem] text-blue-600">
                   {episode.name}

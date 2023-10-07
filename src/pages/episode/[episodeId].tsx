@@ -9,6 +9,21 @@ import {
 import Head from "next/head";
 import OpenAI from "openai";
 import Link from "next/link";
+import { z } from "zod";
+
+const episodesSchema = z.object({
+  air_date: z.string(),
+  characters: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      image: z.string(),
+    }),
+  ),
+  episode: z.string(),
+  name: z.string(),
+  summary: z.string(),
+});
 
 export const getServerSideProps = (async (context) => {
   const { episodeId } = context.query;
@@ -30,6 +45,7 @@ export const getServerSideProps = (async (context) => {
   });
 
   const episodeData = data.episode;
+  const episode = episodesSchema.parse(episodeData);
 
   const episodeSummary = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
@@ -42,20 +58,9 @@ export const getServerSideProps = (async (context) => {
     ],
   });
 
-  const episodeCharacters = episodeData?.characters
-    .filter(Boolean)
-    .map((character) => ({
-      id: character.id ?? "",
-      name: character?.name ?? "",
-      image: character?.image ?? "",
-    }));
-
   return {
     props: {
-      air_date: episodeData?.air_date ?? "",
-      characters: episodeCharacters ?? [],
-      episode: episodeData?.episode ?? "",
-      name: episodeData?.name ?? "",
+      ...episode,
       summary: episodeSummary.choices[0]?.message.content ?? "",
     },
   };

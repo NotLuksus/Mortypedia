@@ -30,6 +30,7 @@ export const env = createEnv({
     ),
     SMTP_SERVER: z.string().url().optional(),
     EMAIL_FROM: z.string().email().optional(),
+    OPENAI_API_KEY: z.string().min(1).optional(),
   },
 
   /**
@@ -52,6 +53,7 @@ export const env = createEnv({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     SMTP_SERVER: process.env.SMTP_SERVER,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

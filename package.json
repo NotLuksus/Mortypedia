@@ -28,6 +28,7 @@
     "next": "^13.4.19",
     "next-auth": "^4.23.0",
     "nodemailer": "^6.9.5",
+    "openai": "^4.11.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "superjson": "^1.13.1",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/client-preset": "^4.1.0",
+    "@total-typescript/ts-reset": "^0.5.1",
     "@types/eslint": "^8.44.2",
     "@types/node": "^18.16.0",
     "@types/react": "^18.2.20",

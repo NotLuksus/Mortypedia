@@ -14,6 +14,8 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "query Characters($page: Int, $filter: FilterCharacter) {\n  characters(page: $page, filter: $filter) {\n    results {\n      id\n      name\n      image\n    }\n  }\n}": types.CharactersDocument,
+    "query Episode($id: ID!) {\n  episode(id: $id) {\n    id\n    name\n    air_date\n    episode\n    characters {\n      id\n      name\n      image\n    }\n  }\n}": types.EpisodeDocument,
+    "query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}": types.EpisodesDocument,
     "query Locations($page: Int, $filter: FilterLocation) {\n  locations(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}": types.LocationsDocument,
 };
 
@@ -35,6 +37,14 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "query Characters($page: Int, $filter: FilterCharacter) {\n  characters(page: $page, filter: $filter) {\n    results {\n      id\n      name\n      image\n    }\n  }\n}"): (typeof documents)["query Characters($page: Int, $filter: FilterCharacter) {\n  characters(page: $page, filter: $filter) {\n    results {\n      id\n      name\n      image\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Episode($id: ID!) {\n  episode(id: $id) {\n    id\n    name\n    air_date\n    episode\n    characters {\n      id\n      name\n      image\n    }\n  }\n}"): (typeof documents)["query Episode($id: ID!) {\n  episode(id: $id) {\n    id\n    name\n    air_date\n    episode\n    characters {\n      id\n      name\n      image\n    }\n  }\n}"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}"): (typeof documents)["query Episodes($page: Int, $filter: FilterEpisode) {\n  episodes(page: $page, filter: $filter) {\n    results {\n      id\n      name\n    }\n  }\n}"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

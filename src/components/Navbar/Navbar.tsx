@@ -1,4 +1,5 @@
 import { useState, type FC } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 import NextLink from "next/link";
 import {
   NavbarBrand,
@@ -15,6 +16,7 @@ import { useRouter } from "next/router";
 
 const Navbar: FC = () => {
   const router = useRouter();
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   return (
     <NextUiNavbar onMenuOpenChange={setOpen}>
@@ -45,11 +47,23 @@ const Navbar: FC = () => {
             Locations
           </Link>
         </NavbarItem>
+        {session && (
+          <NavbarItem isActive={router.pathname === "/likes"}>
+            <Link as={NextLink} color="foreground" href="/likes">
+              My Likes
+            </Link>
+          </NavbarItem>
+        )}
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>
-          <Button as={NextLink} color="primary" href="/login" variant="flat">
-            Login
+          <Button
+            color="primary"
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onClick={() => (session ? signOut() : signIn())}
+            variant="flat"
+          >
+            {session ? "Logout" : "Login"}
           </Button>
         </NavbarItem>
       </NavbarContent>

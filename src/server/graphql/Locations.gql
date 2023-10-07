@@ -1,0 +1,8 @@
+query Locations($page: Int, $filter: FilterLocation) {
+  locations(page: $page, filter: $filter) {
+    results {
+      id
+      name
+    }
+  }
+}

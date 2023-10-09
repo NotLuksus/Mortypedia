@@ -2,6 +2,10 @@ import { env } from "@/env.mjs";
 import { type NextApiRequest, type NextApiResponse } from "next";
 import { OpenAI } from "openai";
 
+export const config = {
+  maxDuration: 45,
+};
+
 // Create an OpenAI API client
 const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,

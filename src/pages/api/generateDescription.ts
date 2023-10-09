@@ -16,7 +16,7 @@ export default async function handler(
   res: NextApiResponse,
 ) {
   const { prompt } = (await req.body) as {
-    prompt: string;
+    prompt?: string;
   };
 
   try {

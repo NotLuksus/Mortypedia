@@ -1,4 +1,3 @@
-import { env } from "@/env.mjs";
 import { CharacterDocument, type CharacterQuery } from "@/generated/graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import {
@@ -6,7 +5,6 @@ import {
   type InferGetServerSidePropsType,
 } from "next";
 import Head from "next/head";
-import OpenAI from "openai";
 import Link from "next/link";
 import NextImage from "next/image";
 import { Button, Image } from "@nextui-org/react";
@@ -14,6 +12,9 @@ import { z } from "zod";
 import { api } from "@/utils/api";
 import { Heart } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useGenerateAIMessage } from "@/hooks/useGenerateAIMessage";
+import { useEffect, useState } from "react";
+import { Spinner } from "@nextui-org/react";
 
 const characterSchema = z.object({
   id: z.string(),
@@ -32,9 +33,6 @@ const characterSchema = z.object({
 
 export const getServerSideProps = (async (context) => {
   const { characterId } = context.query;
-  const openai = new OpenAI({
-    apiKey: env.OPENAI_API_KEY,
-  });
 
   const apolloClient = new ApolloClient({
     ssrMode: true,
@@ -52,22 +50,9 @@ export const getServerSideProps = (async (context) => {
   const characterData = data.character;
   const character = characterSchema.parse(characterData);
 
-  const characterProfile = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    stream: false,
-    max_tokens: 200,
-    messages: [
-      {
-        role: "user",
-        content: `Write a short profile about the character ${character.name} from the series Rick and Morty. There shouldn't be any fomatting or special characters. Return it as a simple string`,
-      },
-    ],
-  });
-
   return {
     props: {
       ...character,
-      profile: characterProfile.choices[0]?.message.content ?? "",
     },
   };
 }) satisfies GetServerSideProps<{
@@ -78,10 +63,9 @@ export const getServerSideProps = (async (context) => {
   species?: string;
   gender?: string;
   episode: Array<{ id: string; name: string }>;
-  profile: string;
 }>;
 
-export default function Episode({
+export default function Character({
   id,
   name,
   image,
@@ -89,7 +73,6 @@ export default function Episode({
   species,
   gender,
   episode,
-  profile,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
   const { data: isLiked } = api.user.isLiked.useQuery({
@@ -98,6 +81,21 @@ export default function Episode({
   });
   const trpcContext = api.useContext();
   const { mutate } = api.user.toggleLike.useMutation();
+
+  const [profile, setProfile] = useState("");
+
+  const { submitPrompt, loading } = useGenerateAIMessage();
+
+  useEffect(() => {
+    const handleGenMessage = async () => {
+      const profile = await submitPrompt(
+        `Write a short profile about the character ${name} from the series Rick and Morty. There shouldn't be any fomatting or special characters. Return it as a simple string. The text should be 100 words`,
+      );
+      setProfile(profile);
+    };
+
+    handleGenMessage().catch(console.error);
+  }, []);
 
   const handleLike = () => {
     mutate(
@@ -118,7 +116,7 @@ export default function Episode({
       <main className="flex min-h-screen w-full flex-col items-center justify-center text-foreground">
         <div className="flex h-full w-full flex-grow flex-col items-start justify-center gap-[1rem] px-[1rem] py-[4rem] lg:w-[80%]">
           <div className="flex w-full flex-col-reverse items-center justify-between gap-[4rem] md:flex-row">
-            <div className="flex w-full flex-col gap-[.5rem] md:w-[60%]">
+            <div className="flex h-full w-full flex-grow flex-col gap-[.5rem] md:w-[60%]">
               <h1 className="text-start text-5xl font-bold">{name}</h1>
               <div className="flex flex-row items-center gap-[1rem]">
                 <p className="text-center text-lg">{species}</p>
@@ -139,7 +137,11 @@ export default function Episode({
                   </Button>
                 )}
               </div>
-              <p className="mt-[1rem] text-start text-lg">{profile}</p>
+              {loading ? (
+                <Spinner className="mt-[2rem]" size="lg" />
+              ) : (
+                <p className="mt-[1rem] text-start text-lg">{profile}</p>
+              )}
             </div>
             <div className="relative h-[300px] w-[300px]">
               <Image as={NextImage} removeWrapper fill src={image} alt={name} />

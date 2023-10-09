@@ -1,18 +1,18 @@
-import { env } from "@/env.mjs";
 import { EpisodeDocument, type EpisodeQuery } from "@/generated/graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { Avatar, Button } from "@nextui-org/react";
+import { Avatar, Button, Spinner } from "@nextui-org/react";
 import {
   type GetServerSideProps,
   type InferGetServerSidePropsType,
 } from "next";
 import Head from "next/head";
-import OpenAI from "openai";
 import Link from "next/link";
 import { z } from "zod";
 import { useSession } from "next-auth/react";
 import { api } from "@/utils/api";
 import { Heart } from "lucide-react";
+import { useGenerateAIMessage } from "@/hooks/useGenerateAIMessage";
+import { useEffect, useState } from "react";
 
 const episodesSchema = z.object({
   id: z.string(),
@@ -30,9 +30,6 @@ const episodesSchema = z.object({
 
 export const getServerSideProps = (async (context) => {
   const { episodeId } = context.query;
-  const openai = new OpenAI({
-    apiKey: env.OPENAI_API_KEY,
-  });
 
   const apolloClient = new ApolloClient({
     ssrMode: true,
@@ -50,22 +47,9 @@ export const getServerSideProps = (async (context) => {
   const episodeData = data.episode;
   const episode = episodesSchema.parse(episodeData);
 
-  const episodeSummary = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    stream: false,
-    max_tokens: 200,
-    messages: [
-      {
-        role: "user",
-        content: `Summarize the Rick & Morty episode ${episodeData?.name}. Write a short paragraph summarizing the episode. There shouldn't be any fomatting or special characters. Return it as a simple string`,
-      },
-    ],
-  });
-
   return {
     props: {
       ...episode,
-      summary: episodeSummary.choices[0]?.message.content ?? "",
     },
   };
 }) satisfies GetServerSideProps<{
@@ -73,12 +57,10 @@ export const getServerSideProps = (async (context) => {
   characters: Array<{ id: string; name: string; image: string }>;
   episode: string;
   name: string;
-  summary: string;
 }>;
 
 export default function Episode({
   id,
-  summary,
   air_date,
   characters,
   episode,
@@ -91,6 +73,21 @@ export default function Episode({
   });
   const trpcContext = api.useContext();
   const { mutate } = api.user.toggleLike.useMutation();
+
+  const [summary, setSummary] = useState("");
+
+  const { submitPrompt, loading } = useGenerateAIMessage();
+
+  useEffect(() => {
+    const handleGenMessage = async () => {
+      const summary = await submitPrompt(
+        `Summarize the Rick & Morty episode ${name}. Write a short paragraph summarizing the episode. There shouldn't be any fomatting or special characters. Return it as a simple string`,
+      );
+      setSummary(summary);
+    };
+
+    handleGenMessage().catch(console.error);
+  }, []);
 
   const handleLike = () => {
     mutate(
@@ -129,7 +126,11 @@ export default function Episode({
               </Button>
             )}
           </div>
-          <p className="text-start text-lg">{summary}</p>
+          {loading ? (
+            <Spinner className="mt-[1rem]" size="lg" />
+          ) : (
+            <p className="mt-[1rem] text-start text-lg">{summary}</p>
+          )}
           <p className="text-start text-xl font-bold">In this episode: </p>
           <div className="flex w-full flex-row flex-wrap gap-[2.5rem] p-[1rem]">
             {characters.map((character) => (

@@ -1,18 +1,18 @@
-import { env } from "@/env.mjs";
 import { LocationDocument, type LocationQuery } from "@/generated/graphql";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { Avatar, Button } from "@nextui-org/react";
+import { Avatar, Button, Spinner } from "@nextui-org/react";
 import {
   type GetServerSideProps,
   type InferGetServerSidePropsType,
 } from "next";
 import Head from "next/head";
-import OpenAI from "openai";
 import Link from "next/link";
 import { z } from "zod";
 import { useSession } from "next-auth/react";
 import { api } from "@/utils/api";
 import { Heart } from "lucide-react";
+import { useGenerateAIMessage } from "@/hooks/useGenerateAIMessage";
+import { useState, useEffect } from "react";
 
 const locationSchema = z.object({
   id: z.string(),
@@ -30,9 +30,6 @@ const locationSchema = z.object({
 
 export const getServerSideProps = (async (context) => {
   const { locationId } = context.query;
-  const openai = new OpenAI({
-    apiKey: env.OPENAI_API_KEY,
-  });
 
   const apolloClient = new ApolloClient({
     ssrMode: true,
@@ -50,22 +47,9 @@ export const getServerSideProps = (async (context) => {
   const locationData = data.location;
   const location = locationSchema.parse(locationData);
 
-  const locationDescription = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    stream: false,
-    max_tokens: 200,
-    messages: [
-      {
-        role: "user",
-        content: `Write a small text about the ${location.name} location from the Rick & Morty series. Write a short paragraph describing the location. There shouldn't be any fomatting or special characters. Return it as a simple string`,
-      },
-    ],
-  });
-
   return {
     props: {
       ...location,
-      description: locationDescription.choices[0]?.message.content ?? "",
     },
   };
 }) satisfies GetServerSideProps<{
@@ -78,16 +62,14 @@ export const getServerSideProps = (async (context) => {
     name: string;
     image: string;
   }>;
-  description: string;
 }>;
 
-export default function Episode({
+export default function Location({
   id,
   name,
   type,
   dimension,
   residents,
-  description,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
   const { data: isLiked } = api.user.isLiked.useQuery({
@@ -96,6 +78,21 @@ export default function Episode({
   });
   const trpcContext = api.useContext();
   const { mutate } = api.user.toggleLike.useMutation();
+
+  const [description, setDescription] = useState("");
+
+  const { submitPrompt, loading } = useGenerateAIMessage();
+
+  useEffect(() => {
+    const handleGenMessage = async () => {
+      const description = await submitPrompt(
+        `Write a small text about the ${name} location from the Rick & Morty series. Write a short paragraph describing the location. There shouldn't be any fomatting or special characters. Return it as a simple string`,
+      );
+      setDescription(description);
+    };
+
+    handleGenMessage().catch(console.error);
+  }, []);
 
   const handleLike = () => {
     mutate(
@@ -134,7 +131,11 @@ export default function Episode({
               </Button>
             )}
           </div>
-          <p className="text-start text-lg">{description}</p>
+          {loading ? (
+            <Spinner className="mt-[2rem]" size="lg" />
+          ) : (
+            <p className="text-start text-lg">{description}</p>
+          )}
           <p className="text-start text-xl font-bold">Residents: </p>
           <div className="flex w-full flex-row flex-wrap gap-[2.5rem] p-[1rem]">
             {residents.map((character) => (
